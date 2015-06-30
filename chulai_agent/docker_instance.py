@@ -1,5 +1,5 @@
 """
-Docker App Class
+Docker Instance Class
 
 for high-level chulai app controlling
 """
@@ -166,6 +166,10 @@ class DockerInstance(object):
                 "{0} invalid state: {1}".format(self.instance_id, state)
             )
 
+    @property
+    def is_http_app(self):
+        return False
+
     def up(self):
         if self.running is False:
             try:
@@ -174,9 +178,7 @@ class DockerInstance(object):
                 raise AgentError(
                     "up instance [{0}] failed: {1}".format(
                         self.instance_id, exc
-                    ),
-                    status_code=409,
-                    payload=dict(instance=str(self), operation="up")
+                    )
                 )
         if self.is_http_app:
             self.check_http()
@@ -243,11 +245,20 @@ class DockerInstance(object):
         return "/home/vagrant/playground/" + self.instance_id
 
     def deploy(self, supervisor_conf, dirs_to_make):
+        process = [
+            proc for proc in supervisor_client.getAllProcessInfo()
+            if proc["name"] == self.instance_id
+        ]
+        if process:
+            self.destroy()
+
         with open(self.supervisor_conf_path, "wt") as conf_f:
             conf_f.write(supervisor_conf)
         with shcmd.cd(self.workspace, create=True):
-            shcmd.mkdir(dirs_to_make)
+            for dir_path in dirs_to_make:
+                shcmd.mkdir(dir_path)
             # create symlink for debug, we can view all config in workspace
+            shcmd.rm("supervisor.conf")
             os.symlink(self.supervisor_conf_path, "supervisor.conf")
 
         try:
@@ -258,6 +269,9 @@ class DockerInstance(object):
             raise AgentError(
                 "deploy {0} error: {1}".format(self.instance_id, exc)
             )
+
+        # return true if new deploy
+        return len(process) == 0
 
     def destroy(self):
         # delete supervisor config if exists
@@ -312,4 +326,4 @@ class DockerInstance(object):
                 logger.debug(tip, exc_info=True)
                 time.sleep(check_interval)
         else:
-            raise AgentError(tip, status_code=410)
+            raise AgentError(tip)
