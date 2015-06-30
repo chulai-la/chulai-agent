@@ -17,35 +17,16 @@ import requests
 import psutil
 import shcmd
 
-import supervisor.childutils
-
+from .clients import docker_client, supervisor_client
 from . import consts
-from . import errors
+from .errors import AgentError
 from . import utils
 
 
 logger = logging.getLogger(__name__)
 
 
-def get_supervisor_client():
-    rpc = supervisor.childutils.getRPCInterface(dict(
-        SUPERVISOR_SERVER_URL='http://localhost:9000/RPC2'
-    ))
-    state = rpc.supervisor.getState().get("statename")
-    if state != "RUNNING":
-        raise errors.ChulaiIOError(
-            "supervisor not in right state [{0}]".format(state)
-        )
-    return rpc.supervisor
-
-
-docker_client = docker.Client()
-supervisor_client = get_supervisor_client()
 supervisor_conf_d = "/home/vagrant/supervisor.d"
-
-
-class AgentError(Exception):
-    pass
 
 
 class DockerInstance(object):

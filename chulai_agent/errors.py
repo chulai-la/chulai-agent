@@ -1,12 +1,12 @@
-'''
-Chulai Errors
-'''
+"""
+Chulai Agent Errors
+"""
 
 
-class ChulaiError(Exception):
-    '''
+class AgentError(Exception):
+    """
     Base Error of Chulai
-    '''
+    """
 
     status_code = 500
 
@@ -18,33 +18,15 @@ class ChulaiError(Exception):
         self.payload = payload
 
     def __str__(self):
-        return '<ChulaiError:{0} {1}>'.format(self.status_code, self.message)
+        return "<ChulaiAgentError:{0} {1}>".format(
+            self.status_code, self.message
+        )
 
     def to_dict(self):
-        '''
+        """
         pack this exception to dict [including message and it's payload]
-        '''
+        """
         rv = dict(self.payload or ())
-        rv['status'] = 'error'
-        rv['message'] = self.message
+        rv["status"] = "error"
+        rv["message"] = self.message
         return rv
-
-
-class ChulaiIOError(ChulaiError):
-    '''
-    Some low-level io error happend
-    '''
-
-
-class ChulaiNotInitedError(ChulaiError):
-    '''
-    Instance not ready
-    '''
-    status_code = 404  # not found
-
-
-class ChulaiAlreadyInitedError(ChulaiError):
-    '''
-    Instance already inited
-    '''
-    status_code = 409  # conflict
