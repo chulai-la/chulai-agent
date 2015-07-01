@@ -16,6 +16,10 @@ def create_app(config_path):
     docker_client.init_app(app)
     supervisor_client.init_app(app)
 
+    from .instance_api import instance_api
+
+    app.register_blueprint(instance_api)
+
     @app.errorhandler(400)
     def handle_400(error):
         message = "missing arguments: {0}".format(error.message)
