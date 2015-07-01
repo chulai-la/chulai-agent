@@ -1,5 +1,7 @@
+import os
 import logging
 
+import shcmd
 import docker.client
 import supervisor.childutils
 
@@ -32,6 +34,23 @@ class DockerClient(object):
 class SupervisorClient(object):
     def __init__(self):
         self._supervisor = None
+        self._conf_dir = None
+
+    @property
+    def conf_dir(self):
+        return self._conf_dir
+
+    @conf_dir.setter
+    def conf_dir(self, new_dir):
+        if os.path.isdir(new_dir) is False:
+            raise AgentError(
+                "can not access to supervisor conf dir [{0}]".format(
+                    new_dir
+                )
+            )
+        shcmd.mkdir(new_dir)
+        self._conf_dir = new_dir
+        return self._conf_dir
 
     def init_app(self, app):
         rpc = supervisor.childutils.getRPCInterface({
@@ -48,6 +67,7 @@ class SupervisorClient(object):
                 "supervisor not in right state [{0}]".format(state)
             )
         self._rpc = rpc.supervisor
+        self.conf_dir = app.config["SUPERVISOR_CONF_DIR"]
 
     def __getattr__(self, attr):
         return getattr(self._rpc, attr)

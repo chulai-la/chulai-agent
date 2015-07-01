@@ -17,16 +17,14 @@ import requests
 import psutil
 import shcmd
 
-from .clients import docker_client, supervisor_client
 from . import consts
-from .errors import AgentError
 from . import utils
+
+from .clients import docker_client, supervisor_client
+from .errors import AgentError
 
 
 logger = logging.getLogger(__name__)
-
-
-supervisor_conf_d = "/home/vagrant/supervisor.d"
 
 
 class DockerInstance(object):
@@ -45,12 +43,8 @@ class DockerInstance(object):
     @property
     def supervisor_conf_path(self):
         return os.path.join(
-            supervisor_conf_d, "{0}.ini".format(self.instance_id)
+            supervisor_client.conf_dir, "{0}.ini".format(self.instance_id)
         )
-
-    @property
-    def playground(self):
-        return self._playground
 
     @property
     def config(self):
@@ -213,17 +207,13 @@ class DockerInstance(object):
         }
         return metrics
 
-    def get_log_info(self, log_type):
-        """Turn log type to real log path
-
-        :param log_type: log_type (like production, stdout, stderr, etc.)
-        """
-        # TODO
-        return "not implemented"
+    def get_log(self, log_path, lastn, timeout):
+        real_path = self.playground, log_path.lstrip("/")
+        return shcmd.tailf(real_path, lastn=lastn, timeout=timeout)
 
     @property
-    def workspace(self):
-        return "/home/vagrant/playground/" + self.instance_id
+    def playground(self):
+        return os.path.join(self.get_config("playground"), self.instance_id)
 
     def deploy(self, supervisor_conf, dirs_to_make):
         process = [
@@ -235,10 +225,10 @@ class DockerInstance(object):
 
         with open(self.supervisor_conf_path, "wt") as conf_f:
             conf_f.write(supervisor_conf)
-        with shcmd.cd(self.workspace, create=True):
+        with shcmd.cd(self.playground, create=True):
             for dir_path in dirs_to_make:
                 shcmd.mkdir(dir_path)
-            # create symlink for debug, we can view all config in workspace
+            # create symlink for debug, we can view all config in playground
             shcmd.rm("supervisor.conf")
             os.symlink(self.supervisor_conf_path, "supervisor.conf")
 
@@ -255,9 +245,6 @@ class DockerInstance(object):
         return len(process) == 0
 
     def destroy(self):
-        # delete supervisor config if exists
-        shcmd.rm(self.supervisor_conf_path)
-
         try:
             self.halt()
             supervisor_client.removeProcessGroup(self.instance_id)
@@ -274,8 +261,8 @@ class DockerInstance(object):
                 exc_info=True
             )
 
-        # clean workspace, TODO backup to object-storage
-        shcmd.rm(self.workspace, isdir=True)
+        # clean playground, TODO backup to object-storage
+        shcmd.rm(self.playground, isdir=True)
 
         # check again for sure the proc is dead
         all_procs = [
@@ -286,8 +273,9 @@ class DockerInstance(object):
             raise AgentError(
                 "delete {0} failed:\n{1}\n".format(self.instance_id, all_procs)
             )
-        else:
-            return True
+
+        shcmd.rm(self.supervisor_conf_path)
+        return True
 
     def check_http(self):
         timedout = time.time() + self.start_timeout
