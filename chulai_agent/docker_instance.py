@@ -75,6 +75,14 @@ class DockerInstance(object):
                 return args[0]
             raise AgentError("invalid config fonud! missing [{0}]".format(key))
 
+    @property
+    def repo(self):
+        return self.get_config("repo")
+
+    @property
+    def tag(self):
+        return self.get_config("tag")
+
     def __str__(self):
         """
         Return program friendly string of this instance
@@ -242,6 +250,8 @@ class DockerInstance(object):
             )
 
         # return true if new deploy
+
+        docker_client.pull(self.repo, self.tag)
         return len(process) == 0
 
     def destroy(self):
