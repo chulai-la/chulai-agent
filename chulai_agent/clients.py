@@ -62,7 +62,7 @@ class SupervisorClient(object):
 
         state = None
         try:
-            rpc = supervisor.childutils.getRPCInterfac(env)
+            rpc = supervisor.childutils.getRPCInterface(env)
             rpc.supervisor.getState()
             state = rpc.supervisor.getState().get("statename")
         except BaseException as exc:
