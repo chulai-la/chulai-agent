@@ -33,7 +33,6 @@ class DockerInstance(object):
         """
         DockerApp Object
         :param instance_id: instance's id
-        :param playground: instance's playground (parse supervisor-conf)
         """
         self._instance_id = instance_id
 
@@ -252,7 +251,9 @@ class DockerInstance(object):
 
         # return true if new deploy
 
-        res = docker_client.pull(self.repo, self.tag).splitlines()
+        res = docker_client.pull(
+            self.repo, self.tag, insecure_registry=True
+        ).splitlines()
         msg = json.loads(res[-1]).get("errorDetail", {}).get("message")
         if msg:
             raise AgentError("pulling image error: {0}".format(msg))
@@ -269,6 +270,8 @@ class DockerInstance(object):
             ))
         try:
             docker_client.kill(self.cid, signal.SIGKILL)
+        except AgentError:
+            logger.info("container already quited")
         except BaseException:
             logger.warn(
                 "trying to kill {0}, but failed".format(self.instance_id),
