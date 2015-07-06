@@ -3,9 +3,7 @@ import logging
 
 import shcmd
 import docker.client
-import supervisor.xmlrpc
-
-from xmlrpc.client import ServerProxy
+import supervisor.childutils
 
 from .errors import AgentError
 
@@ -55,19 +53,16 @@ class SupervisorClient(object):
         return self._conf_dir
 
     def init_app(self, app):
-        conf_key = "SUPERVISOR_SERVER_URL"
-        serverurl = os.getenv(conf_key, app.config[conf_key])
+        env = {
+            key: val
+            for key, val in app.config.items()
+            if key.startswith("SUPERVISOR_")
+        }
+        env.update(os.environ.copy())
 
         state = None
         try:
-            rpc = ServerProxy(
-                "http://127.0.0.1",  # a useless but valid url
-                transport=supervisor.xmlrpc.SupervisorTransport(
-                    username=app.config.get("SUPERVISOR_USERNAME"),
-                    password=app.config.get("SUPERVISOR_PASSWORD"),
-                    serverurl=serverurl
-                )
-            )
+            rpc = supervisor.childutils.getRPCInterfac(env)
             rpc.supervisor.getState()
             state = rpc.supervisor.getState().get("statename")
         except BaseException as exc:
