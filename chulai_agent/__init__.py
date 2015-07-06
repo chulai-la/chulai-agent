@@ -18,7 +18,7 @@ def create_app(config_path):
 
     from .instance_api import instance_api
 
-    app.register_blueprint(instance_api)
+    app.register_blueprint(instance_api, url_prefix="/instances")
 
     @app.errorhandler(400)
     def handle_400(error):
