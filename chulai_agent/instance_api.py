@@ -30,7 +30,7 @@ def set_g_instance(endpoint, value):
     g.instance = docker_instance.DockerInstance(instance_id)
 
 
-@instance_api.route("/<instance_id>/init", methods=["PUT"])
+@instance_api.route("/<instance_id>/deploy", methods=["PUT"])
 def deploy_instance(instance_id):
     current_app.logger.debug(request.json)
     try:
@@ -49,7 +49,7 @@ def deploy_instance(instance_id):
 def show_stats(instance_id):
     """show instance's stats [cpu, memory usage, etc.]
 
-    :query app_id: app_id
+    :query instance_id: instance_id
 
     :statuscode 200: show stats json
     :statuscode 404: instance not found
@@ -87,12 +87,10 @@ def show_stats(instance_id):
 
 
 @instance_api.route("/<instance_id>/<operation>", methods=["PUT"])
-def start_instance(app_id, operation):
+def op_on_instance(instance_id, operation):
     """make instance ``up`` or ``halt`` it
 
-    :query app: app name like `chulai`
-    :query app_id: app_id
-    :query operation: ``up`` or ``halt``
+    :query instance_id: instance_id
 
     :header Content-Type: application/json
     :>json string status: ``success`` or ``error``
