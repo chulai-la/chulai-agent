@@ -6,6 +6,7 @@ for high-level chulai app controlling
 
 import configparser
 import functools
+import json
 import logging
 import os
 import xmlrpc
@@ -251,7 +252,10 @@ class DockerInstance(object):
 
         # return true if new deploy
 
-        docker_client.pull(self.repo, self.tag)
+        res = docker_client.pull(self.repo, self.tag).splitlines()
+        msg = json.loads(res[-1]).get("errorDetail", {}).get("message")
+        if msg:
+            raise AgentError("pulling image error: {0}".format(msg))
         return len(process) == 0
 
     def destroy(self):
