@@ -3,6 +3,7 @@ from flask import current_app
 from flask import g
 from flask import jsonify
 from flask import request
+from jinja2 import Template
 
 from . import docker_instance
 from . import errors
@@ -34,13 +35,16 @@ def set_g_instance(endpoint, value):
 def deploy_instance(instance_id):
     current_app.logger.debug(request.json)
     try:
-        supervisor_conf = request.json["supervisor-config"]
+        supervisor_template = request.json["supervisor-config"]
         dirs_to_make = request.json["dirs-to-make"]
     except KeyError as exc:
         raise errors.AgentError("missing {0}".format(exc), 400)
 
     current_app.logger.info("going to deploy {0}".format(g.instance))
-    new_deploy = g.instance.deploy(supervisor_conf, dirs_to_make)
+    new_deploy = g.instance.deploy(
+        Template(supervisor_template).render(**current_app.config["HOST_INFO"]),
+        dirs_to_make
+    )
 
     return jsonify(status=consts.SUCCESS, new_deploy=new_deploy)
 

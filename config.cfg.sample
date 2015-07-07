@@ -1,0 +1,15 @@
+# HOST SETTINGS
+HOST_INFO = dict(
+    host_name="hostname",
+    host_ip="host-ip"
+)
+
+# DOCKER SETTINGS
+DOCKER_URL = "unix://var/run/docker.sock"
+DOCKER_VERSION = "1.12"
+DOCKER_TIMEOUT = 10
+
+# SUPERVISOR SETTINGS
+# if you run agent server in supervisor, comment next line
+SUPERVISOR_SERVER_URL = "http://localhost:9000/RPC2"
+SUPERVISOR_CONF_DIR = "/home/vagrant/supervisor.d"
