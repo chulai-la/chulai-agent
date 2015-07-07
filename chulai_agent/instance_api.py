@@ -42,7 +42,9 @@ def deploy_instance(instance_id):
 
     current_app.logger.info("going to deploy {0}".format(g.instance))
     new_deploy = g.instance.deploy(
-        Template(supervisor_template).render(**current_app.config["HOST_INFO"]),
+        Template(supervisor_template).render(
+            agent=current_app.config["HOST_INFO"]
+        ),
         dirs_to_make
     )
 
