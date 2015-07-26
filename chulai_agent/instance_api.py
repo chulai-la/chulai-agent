@@ -31,7 +31,7 @@ def set_g_instance(endpoint, value):
     g.instance = docker_instance.DockerInstance(instance_id)
 
 
-@instance_api.route("/<instance_id>/deploy", methods=["PUT"])
+@instance_api.route("/<instance_id>/deploy", methods=["POST"])
 def deploy_instance(instance_id):
     current_app.logger.debug(request.json)
     try:
@@ -92,7 +92,7 @@ def show_stats(instance_id):
     )
 
 
-@instance_api.route("/<instance_id>/<operation>", methods=["PUT"])
+@instance_api.route("/<instance_id>/<operation>", methods=["POST"])
 def op_on_instance(instance_id, operation):
     """make instance ``up`` or ``halt`` it
 
@@ -122,7 +122,7 @@ def op_on_instance(instance_id, operation):
         )
 
 
-@instance_api.route("/<instance_id>/destroy", methods=["PUT"])
+@instance_api.route("/<instance_id>/destroy", methods=["POST"])
 def destroy_instance(instance_id):
     """destroy a instance, clean it's workspace, upload it's log"""
     g.instance.destroy()
