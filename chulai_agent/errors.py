@@ -30,3 +30,7 @@ class AgentError(Exception):
         rv["status"] = "error"
         rv["message"] = self.message
         return rv
+
+
+class NotFoundError(Exception):
+    """Image Not Found of Chulai"""

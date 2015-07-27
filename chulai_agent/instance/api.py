@@ -3,18 +3,25 @@ from flask import current_app
 from flask import g
 from flask import jsonify
 from flask import request
-from jinja2 import Template
+
+from .. import errors
+from .. import consts
 
 from . import docker_instance
-from . import errors
-from . import consts
 
 
 instance_api = Blueprint("instance_api", __name__)
 
 
+OPERATION = dict(
+    GET="get {0}'s stats",
+    POST="pull {0} up",
+    DELETE="put {0} down"
+)
+
+
 @instance_api.errorhandler(errors.AgentError)
-def not_inited_error(error):
+def agent_error(error):
     current_app.logger.error(error)
     res = jsonify(error.to_dict())
     res.status_code = error.status_code
@@ -24,34 +31,41 @@ def not_inited_error(error):
 @instance_api.url_value_preprocessor
 def set_g_instance(endpoint, value):
     """set docker_instance to global variable"""
+    op_fmt = OPERATION.get(request.method)
+    if op_fmt is None:
+        raise errors.AgentError("unknown operation", 405)
+
     instance_id = value.get("instance_id")
     if instance_id is None:
         tip = "missing instance id"
         raise errors.ChulaiError(tip, 400)
+
     g.instance = docker_instance.DockerInstance(instance_id)
+    current_app.logger.info(op_fmt.format(g.instance))
 
 
-@instance_api.route("/<instance_id>/deploy", methods=["POST"])
-def deploy_instance(instance_id):
-    current_app.logger.debug(request.json)
+@instance_api.route("/instances/<instance_id>", methods=["POST"])
+def pull_up(instance_id):
+    if g.instance.exists:
+        raise errors.AgentError("{0} already exists".format(g.instance), 409)
+
     try:
-        supervisor_template = request.json["supervisor-config"]
-        dirs_to_make = request.json["dirs-to-make"]
+        message = g.instance.pull_up(
+            request.json["app-id"],
+            request.json["commit"],
+            request.json["image-tag"],
+            request.json["environments"],
+            request.json["worker"],
+            request.json["port"]
+        )
     except KeyError as exc:
         raise errors.AgentError("missing {0}".format(exc), 400)
 
     current_app.logger.info("going to deploy {0}".format(g.instance))
-    new_deploy = g.instance.deploy(
-        Template(supervisor_template).render(
-            agent=current_app.config["HOST_INFO"]
-        ),
-        dirs_to_make
-    )
-
-    return jsonify(status=consts.SUCCESS, new_deploy=new_deploy)
+    return jsonify(status=consts.SUCCESS, message=message)
 
 
-@instance_api.route("/<instance_id>/stats")
+@instance_api.route("/instances/<instance_id>")
 def show_stats(instance_id):
     """show instance's stats [cpu, memory usage, etc.]
 
@@ -92,9 +106,9 @@ def show_stats(instance_id):
     )
 
 
-@instance_api.route("/<instance_id>/<operation>", methods=["POST"])
-def op_on_instance(instance_id, operation):
-    """make instance ``up`` or ``halt`` it
+@instance_api.route("/instances/<instance_id>", methods=["DELETE"])
+def put_down(instance_id):
+    """destroy a instance, upload it's log, and cleanup the playground
 
     :query instance_id: instance_id
 
@@ -108,22 +122,5 @@ def op_on_instance(instance_id, operation):
             "status": "success"
         }
     """
-    operation_func = getattr(g.instance, operation, None)
-    if operation_func is not None:
-        current_app.logger.info(
-            "going to {0} {1}".format(operation, g.instance)
-        )
-        operation_func()
-        return jsonify(status=consts.SUCCESS, operation=operation)
-    else:
-        raise errors.AgentError(
-            "unknown operation [{0}]".format(operation),
-            status_code=400
-        )
-
-
-@instance_api.route("/<instance_id>/destroy", methods=["POST"])
-def destroy_instance(instance_id):
-    """destroy a instance, clean it's workspace, upload it's log"""
-    g.instance.destroy()
-    return jsonify(status=consts.SUCCESS)
+    message = g.instance.put_down()
+    return jsonify(status=consts.SUCCESS, message=message)
