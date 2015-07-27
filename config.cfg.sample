@@ -1,8 +1,6 @@
 # HOST SETTINGS
-HOST_INFO = dict(
-    host_name="hostname",
-    host_ip="host-ip"
-)
+HOSTNAME = "hostname"
+HOST_IP = "host-ip"
 
 # DOCKER SETTINGS
 DOCKER_URL = "unix://var/run/docker.sock"
@@ -10,6 +8,19 @@ DOCKER_VERSION = "1.12"
 DOCKER_TIMEOUT = 10
 
 # SUPERVISOR SETTINGS
+# if your supervisor uses password, uncomment following lines
+# SUPERVISOR_URERNAME = "user-name"
+# SUPERVISOR_PASSWORD = "password"
 # if you run agent server in supervisor, comment next line
 SUPERVISOR_SERVER_URL = "http://localhost:9000/RPC2"
 SUPERVISOR_CONF_DIR = "/home/vagrant/supervisor.d"
+
+# RUNTIME SETTINGS
+START_TIMEOUT = 10
+STOP_TIMEOUT = 10
+PAAS_DOMAIN = "chulai.la"
+PLAYGROUND = "/path/to/chulai/playground"
+LOG_MAX_MB = 20
+LOG_BACKUPS = 5
+PAAS_USER = "chulai"
+MEMORY_LIMIT = 512
