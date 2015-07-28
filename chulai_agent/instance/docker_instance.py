@@ -221,8 +221,7 @@ class DockerInstance(object):
         if self.state is not None:
             raise errors.AgentError("{0} ".format(self), 409)
         # prepare image
-        # FIXME
-        # pull_image(image_tag)
+        pull_image(image_tag)
         # prepare dirs
         for dir_path in self.dirs_to_make:
             shcmd.mkdir(dir_path)
