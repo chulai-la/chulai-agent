@@ -51,12 +51,12 @@ def pull_up(instance_id):
 
     try:
         message = g.instance.pull_up(
-            request.json["app-id"],
+            str(request.json["app-id"]),
             request.json["commit"],
             request.json["image-tag"],
             request.json["environments"],
             request.json["worker"],
-            request.json["port"]
+            int(request.json["port"])
         )
     except KeyError as exc:
         raise errors.AgentError("missing {0}".format(exc), 400)

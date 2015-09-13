@@ -220,6 +220,7 @@ class DockerInstance(object):
     ):
         if self.state is not None:
             raise errors.AgentError("{0} ".format(self), 409)
+        app_id = str(app_id)
         # prepare image
         pull_image(image_tag)
         # prepare dirs
