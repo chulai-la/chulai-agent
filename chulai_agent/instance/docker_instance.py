@@ -226,12 +226,8 @@ class DockerInstance(object):
         # prepare dirs
         for dir_path in self.dirs_to_make:
             shcmd.mkdir(dir_path)
-        # create symlink for debug, we can view all config in playground
-        with shcmd.cd(self.playground, create=True):
-            shcmd.rm("supervisor.conf")
-            os.symlink(self.supervisor_conf_path, "supervisor.conf")
         # prepare supervisor stuff
-        supervisor_conf = self.make_supervisor_conf(
+        supervisor_conf, debug_script = self.make_supervisor_conf(
             app_id,
             commit,
             image_tag,
@@ -241,6 +237,12 @@ class DockerInstance(object):
         )
         with open(self.supervisor_conf_path, "wt") as conf_f:
             conf_f.write(supervisor_conf)
+        # create symlink for debug, we can view all config in playground
+        with shcmd.cd(self.playground, create=True):
+            shcmd.rm("supervisor.conf")
+            os.symlink(self.supervisor_conf_path, "supervisor.conf")
+            with open("go-to-docker.sh", "wt") as script_f:
+                script_f.write(debug_script)
         try:
             supervisor_client.reloadConfig()
             supervisor_client.addProcessGroup(self.instance_id)
@@ -393,4 +395,9 @@ class DockerInstance(object):
             instance=instance_info,
             agent=agent
         )
-        return supervisor_conf
+        debug_script = render_template(
+            "go-to-docker.sh",
+            instance=instance_info,
+            agent=agent
+        )
+        return supervisor_conf, debug_script
