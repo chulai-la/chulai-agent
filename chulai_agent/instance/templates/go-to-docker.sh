@@ -1,6 +1,6 @@
 #!/bin/bash
 
-docker run \
+docker run -it \
     -h {{ agent.host_name }}.{{ agent.paas_domain }} \
     --rm=true \
     --memory-swap=-1 \
