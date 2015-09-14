@@ -387,7 +387,12 @@ class DockerInstance(object):
             memory_limit=environments.pop("MEMORY_LIMIT", agent.mem_limit),
             stdlogs_dir=self.stdlogs_dir,
             logs_dir=self.logs_dir,
-            work_dir=os.path.join("/home", agent.paas_user, app_id)
+            work_dir=os.path.join("/home", agent.paas_user, app_id),
+            # FIXME: remove hardcodeed assets_dir
+            assets_dir=os.path.join(
+                "/mnt/data/chulai/central-perk/app-assets",
+                app_id
+            )
         )
 
         supervisor_conf = render_template(

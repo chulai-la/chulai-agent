@@ -8,5 +8,6 @@ docker run \
     {%- for env_name, env_val in instance.environments.items() %}
     -e {{ "%r=%r"|format(env_name, env_val) }} \
     {%- endfor %}
+    -v {{ instance.assets_dir }}:{{ instance.work_dir }}/public/assets \
     {{ instance.image_tag }} \
     /bin/bash
