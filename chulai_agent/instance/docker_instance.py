@@ -301,10 +301,10 @@ class DockerInstance(object):
                 "trying to kill {0}, but failed".format(self.instance_id),
                 exc_info=True
             )
-        # clean playground, TODO backup to object-storage
-        shcmd.rm(self.playground, isdir=True)
         # remove supervisor config
         shcmd.rm(self.supervisor_conf_path)
+        # clean playground, TODO backup to object-storage
+        shcmd.rm(self.playground, isdir=True)
 
     def check_http(self):
         timedout = time.time() + self.start_timeout
