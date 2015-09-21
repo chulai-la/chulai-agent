@@ -109,20 +109,10 @@ class DockerInstance(object):
         """
         Returns container id of current project
         """
-        containers = docker_client.containers(
-            all=True, filters=dict(label=self.instance_id)
-        )
-        cnt = len(containers)
-        if cnt != 1:
-            raise errors.NotFoundError(
-                "{0} containers found for {1}".format(cnt, self.instance_id)
-            )
-        try:
-            return containers[0]["Id"]
-        except KeyError:
-            raise errors.AgentError(
-                "error find cid from [{0}]".format(containers[0])
-            )
+        for container in docker_client.containers(all=True):
+            if self.instance_id in container["Names"]:
+                return container["Id"]
+        raise errors.AgentError("can not find cid of {0}".format(self))
 
     @property
     def pid(self):
