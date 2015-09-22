@@ -110,7 +110,8 @@ class DockerInstance(object):
         Returns container id of current project
         """
         for container in docker_client.containers(all=True):
-            if self.instance_id in container["Names"]:
+            name = "/{0}".format(self.instance_id)
+            if name in container["Names"]:
                 return container["Id"]
         raise errors.AgentError("can not find cid of {0}".format(self))
 
