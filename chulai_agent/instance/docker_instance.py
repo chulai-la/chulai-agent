@@ -265,9 +265,11 @@ class DockerInstance(object):
 
     def put_down(self):
         try:
+            cid = None
             if not self.exists:
                 return "{0} not exists".format(self)
             if self.running:
+                cid = self.cid
                 supervisor_client.stopProcess(self.instance_id)
             supervisor_client.removeProcessGroup(self.instance_id)
             supervisor_client.reloadConfig()
@@ -280,11 +282,12 @@ class DockerInstance(object):
                 payload=dict(instance=str(self), operation="put down")
             )
         finally:
-            self.cleanup()
+            self.cleanup(cid)
 
-    def cleanup(self):
+    def cleanup(self, cid):
         try:
-            docker_client.kill(self.cid, signal.SIGKILL)
+            if cid is not None:
+                docker_client.kill(self.cid, signal.SIGKILL)
         except errors.NotFoundError:
             logger.info("container already quited")
         except BaseException:
