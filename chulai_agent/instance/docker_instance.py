@@ -348,8 +348,12 @@ class DockerInstance(object):
         return os.path.join(self.playground, "stdout-log.d")
 
     @property
+    def share_dir(self):
+        return os.path.join(self.playground, "share.d")
+
+    @property
     def dirs_to_make(self):
-        return [self.logs_dir, self.stdlogs_dir]
+        return [self.logs_dir, self.stdlogs_dir, self.share_dir]
 
     @property
     def exists(self):
@@ -382,6 +386,7 @@ class DockerInstance(object):
             stdlogs_dir=self.stdlogs_dir,
             logs_dir=self.logs_dir,
             work_dir=os.path.join("/home", agent.paas_user, app_id),
+            share_dir=self.share_dir,
             # FIXME: remove hardcodeed assets_dir
             assets_dir=os.path.join(
                 "/mnt/data/chulai/central-perk/app-assets",

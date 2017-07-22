@@ -9,5 +9,6 @@ docker run -it \
     -e {{ "%r=%r"|format(env_name, env_val) }} \
     {%- endfor %}
     -v {{ instance.assets_dir }}:{{ instance.work_dir }}/public/assets \
+    -v {{ instance.share_dir }}:{{ instance.work_dir }}/share \
     {{ instance.image_tag }} \
     /bin/bash
