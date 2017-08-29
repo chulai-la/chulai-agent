@@ -10,5 +10,6 @@ docker run -it \
     {%- endfor %}
     -v {{ instance.assets_dir }}:{{ instance.work_dir }}/public/assets \
     -v {{ instance.share_dir }}:{{ instance.work_dir }}/share \
+    -v /etc/localtime:/etc/localtime:ro \
     {{ instance.image_tag }} \
     /bin/bash
