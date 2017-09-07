@@ -111,7 +111,7 @@ class DockerInstance(object):
         """
         for container in docker_client.containers(all=True):
             name = "/{0}".format(self.instance_id)
-            if name in container.get("Names", []):
+            if name in (container.get("Names") or []):
                 return container["Id"]
         raise errors.AgentError("can not find cid of {0}".format(self))
 
